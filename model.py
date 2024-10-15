@@ -89,6 +89,5 @@ class WeightedBCELoss(nn.Module):
 
     def forward(self, inputs, targets):
         bce_loss = nn.BCELoss(reduction='none')(inputs, targets)
-        # Apply weights: FN gets more weight, FP gets less
         weights = targets * self.weight_fn + (1 - targets) * self.weight_fp
         return (weights * bce_loss).mean()

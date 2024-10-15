@@ -24,9 +24,8 @@ def data_splits():
     return clips, labels, eval_clips, eval_labels
 
 
-def train(model, data):
+def trainer(model, data):
     model.train()  # Set the model to training mode
-
     train_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
     cnt = 0
     for batch in train_loader:
@@ -35,7 +34,6 @@ def train(model, data):
         b_labels = b_labels.to(consts.DEVICE)
         b_labels = b_labels.unsqueeze(-1).float()
         optimizer.zero_grad()  # Clear previous gradients
-
         # Step 1: Make predictions using the model
         output = model(b_clips)  # Calls the forward function
         output = torch.sigmoid(output)
@@ -44,15 +42,11 @@ def train(model, data):
             print("Finished " + str(cnt) + " clips out of " + str(len(clips)))
         # Step 2: Compute the loss
         loss = loss_fn(output, b_labels)
-
         # Step 3: Backward pass to compute gradients
         loss.backward()
-
         # Step 4: Optimization step (update the weights of both EfficientNet and LSTM)
         optimizer.step()
-
         print(f'Loss: {loss.item(): .4f}')
-
         return model
 
 
@@ -137,5 +131,5 @@ if __name__ == "__main__":
     # Training loop
     for epoch in range(consts.NUM_EPOCHS):
         print("starting epoch " + str(epoch + 1))
-        model = train(model, labeled_clips)
+        model = trainer(model, labeled_clips)
         evaluate(model, labeled_eval_clips)

@@ -6,7 +6,7 @@ import numpy as np
 import consts
 import training
 from dataset_creation import extract_frames
-from model import EfficientNetLSTMModel # do not remove
+from model import EfficientNetLSTMModel # noqa: F401
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -100,4 +100,4 @@ def process_video(input_path, output_path, file):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
