@@ -6,6 +6,7 @@ import numpy as np
 import consts
 import training
 from dataset_creation import extract_frames
+from model import EfficientNetLSTMModel # do not remove
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
