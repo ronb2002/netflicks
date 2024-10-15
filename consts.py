@@ -1,0 +1,20 @@
+import torch
+
+FPS = 2
+FILE_PATH = "videos/"
+CLIP_DURATION = 30
+FRAME_AMOUNT = FPS * CLIP_DURATION
+CLIPS_PER_GAME = 3
+VIDEO_LENGTH_SECS = 2700
+PRODUCTION_MODEL_PATH = "model_38_190.pth"
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+TRAIN_TEST_SPLIT = 6
+NUMBER_OF_VIDEOS = 3
+REDO_CLIPS = True
+BEST_FP = 400
+BEST_FN = 30
+HIDDEN_SIZE = 1024
+NUM_LAYERS = 2
+LR = 0.0001
+WEIGHT_FN = 50.0
+NUM_EPOCHS = 16
