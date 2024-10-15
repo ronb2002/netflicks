@@ -185,6 +185,7 @@
         if (file) {
             // Reset output section when a new video is chosen
             resultSection.style.display = 'none';
+            noOutputMessage.style.display = 'none';
             outputSource.src = ''; // Clear previous output source
             outputVideo.load(); // Reset video element
             downloadLink.onclick = null; // Clear previous download link
