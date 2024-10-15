@@ -226,6 +226,7 @@
                     window.location.href = result.download_link; // Set the download link on click
                 };
                 document.getElementById('noOutputMessage').style.display = 'none'; // Hide no output message
+                downloadLink.style.display = 'inline-block';
             } else {
                 document.getElementById('noOutputMessage').style.display = 'block'; // Show no output message
                 downloadLink.style.display = 'none'; // Hide download button if no output
