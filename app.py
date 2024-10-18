@@ -70,7 +70,6 @@ def max_sequence_of_ones(predictions):
                 max_start_index = start_index
             current_length = 0
 
-    # Check at the end of the loop in case the longest sequence ends at the last element
     if current_length > max_length:
         max_length = current_length
         max_start_index = start_index
