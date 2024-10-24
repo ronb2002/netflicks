@@ -25,7 +25,7 @@ git clone https://github.com/ronb2002/netflicks.git
 Change into the project directory:
 
 ```bash
-cd yourproject
+cd netflicks
 ```
 
 ### 3. Install Required Modules
