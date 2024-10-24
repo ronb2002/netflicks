@@ -80,12 +80,14 @@ def process_video(input_path, output_path, file):
     processing_filename = 'processing_' + file.filename
     processing_path = os.path.join(app.config['PROCESSING_FOLDER'], processing_filename)
     clip = VideoFileClip(input_path)
-    clip.write_videofile(processing_path, fps=consts.FPS, audio=False)
+    clip_resized = clip.resize(height=224)
+    clip_resized.write_videofile(processing_path, fps=consts.FPS, audio=False)
     clip.close()
     frames = extract_frames(str(processing_path))
     frames = np.array(frames)
     model = torch.load(consts.PRODUCTION_MODEL_PATH, map_location=consts.DEVICE)
     predictions = training.evaluate(model, [frames], labeled=False)
+    print(predictions)
     max_start_index, max_length = max_sequence_of_ones(predictions)
     if max_length == 0:
         return False
