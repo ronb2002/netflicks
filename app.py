@@ -87,7 +87,7 @@ def process_video(input_path, output_path, file):
     frames = np.array(frames)
     model = torch.load(consts.PRODUCTION_MODEL_PATH, map_location=consts.DEVICE)
     predictions = training.evaluate(model, [frames], labeled=False)
-    print(predictions)
+    print("predictions: " + str(torch.nonzero(torch.eq(predictions, 1))[:, 1]))
     max_start_index, max_length = max_sequence_of_ones(predictions)
     if max_length == 0:
         return False
