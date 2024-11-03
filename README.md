@@ -1,6 +1,6 @@
 # Netflicks
 Workshop on Deep Learning Project  
-
+Ron and Oded
 ## Table of Contents
 
 1. [Installation](#installation)
