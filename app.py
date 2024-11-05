@@ -29,6 +29,7 @@ def download_file(filename):
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    """Upload clip selected when upload button was pressed"""
     if 'video' not in request.files:
         return jsonify({'error': 'No video part'}), 400
     file = request.files['video']
@@ -43,7 +44,7 @@ def upload_file():
 
         try:
             success = process_video(input_path, output_path, file)
-            if not success:
+            if not success:  # no goal found in clip
                 return jsonify({'output_file': None, 'error': 'No output file created'}), 200
             return jsonify({
                 'output_file': url_for('download_file', filename=output_filename),
@@ -56,6 +57,7 @@ def upload_file():
 
 
 def max_sequence_of_ones(predictions):
+    """Finds the maximum sequence of ones in the predictions"""
     max_length = 0
     current_length = 0
     start_index = -1
@@ -81,17 +83,19 @@ def process_video(input_path, output_path, file):
     processing_filename = 'processing_' + file.filename
     processing_path = os.path.join(app.config['PROCESSING_FOLDER'], processing_filename)
     clip = VideoFileClip(input_path)
+    # clip preprocessing
     clip_resized = clip.resize(height=224)
     clip_resized.write_videofile(processing_path, fps=consts.FPS, audio=False)
     clip.close()
     frames = extract_frames(str(processing_path))
     frames = np.array(frames)
     model = torch.load(consts.PRODUCTION_MODEL_PATH, map_location=consts.DEVICE)
-    predictions = training.evaluate(model, [frames], labeled=False)
+    predictions = training.evaluate(model, [frames], labeled=False)  # run model on input clip
     print("predictions: " + str(torch.nonzero(torch.eq(predictions, 1))[:, 1]))
-    max_start_index, max_length = max_sequence_of_ones(predictions)
-    if max_length == 0:
+    max_start_index, max_length = max_sequence_of_ones(predictions)  # returns the time and length of the goal in clip
+    if max_length == 0:  # no goal found
         return False
+    # create sub clip with the goal
     start = max_start_index // consts.FPS
     end = ((max_start_index + max_length) // 2) + 1
     clip = VideoFileClip(input_path)

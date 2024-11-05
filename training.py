@@ -13,6 +13,7 @@ batch_size = 8
 
 
 def data_splits():
+    """Splits the clips and labels randomly into the training and verification sets"""
     clips, labels = get_clips_and_labels()
     indices = np.random.permutation(clips.shape[0])
     clips = clips[indices]
@@ -25,47 +26,48 @@ def data_splits():
 
 
 def trainer(model, data):
-    model.train()  # Set the model to training mode
+    """Model trainer on data"""
+    model.train()  # Setting the model to training mode
     train_loader = DataLoader(data, batch_size=batch_size, shuffle=True)
-    cnt = 0
+    cnt = 0  # For printing training status updates at certain points
     for batch in train_loader:
         b_clips, b_labels = batch
-        b_clips = b_clips.to(consts.DEVICE)
+        b_clips = b_clips.to(consts.DEVICE)  # moving to GPU
         b_labels = b_labels.to(consts.DEVICE)
         b_labels = b_labels.unsqueeze(-1).float()
-        optimizer.zero_grad()  # Clear previous gradients
-        # Step 1: Make predictions using the model
-        output = model(b_clips)  # Calls the forward function
+        optimizer.zero_grad()  # clearing previous gradients
+        output = model(b_clips)  # calling the forward function
         output = torch.sigmoid(output)
         cnt += batch_size
         if cnt % (20 * batch_size) == 0:
             print("Finished " + str(cnt) + " clips out of " + str(len(clips)))
-        # Step 2: Compute the loss
+        # loss computation
         loss = loss_fn(output, b_labels)
-        # Step 3: Backward pass to compute gradients
+        # backward pass to compute gradients
         loss.backward()
-        # Step 4: Optimization step (update the weights of both EfficientNet and LSTM)
+        # optimization step
         optimizer.step()
         print(f'Loss: {loss.item(): .4f}')
         return model
 
 
 def evaluate(model, data, labeled=True):
+    """Model evaluation on validation set"""
     eval_loader = DataLoader(data, batch_size=len(data), shuffle=False)
     model.eval()
-    if labeled:
+    if labeled:  # part of the validation set
         b_clips, b_labels = next(iter(eval_loader))
-        b_clips = b_clips.to(consts.DEVICE)
+        b_clips = b_clips.to(consts.DEVICE)  # moving to GPU
         b_labels = b_labels.to(consts.DEVICE)
         b_labels = b_labels.unsqueeze(-1).float()
-    else:
+    else:  # clip inputted from the site
         b_clips = next(iter(eval_loader))
         b_clips = b_clips.to(consts.DEVICE)
     with torch.no_grad():
         output = model(b_clips)
         output_loss = torch.sigmoid(output)
         predictions = (torch.sigmoid(output) > 0.5).long()
-    if labeled:
+    if labeled: # print statistics if part of the validation set
         loss_e = loss_eval(output_loss, b_labels)
         stats(b_labels, predictions)
         print(f'Eval Loss: {loss_e.item():.4f}')
@@ -73,6 +75,7 @@ def evaluate(model, data, labeled=True):
 
 
 def stats(b_labels, predictions):
+    """Prints statistics for the validation set"""
     tp, fn, fp, tn = 0, 0, 0, 0
     has_goal_pred_goal, has_goal_pred_no_goal, has_no_goal_pred_goal, has_no_goal_pred_no_goal = 0, 0, 0, 0
     for i in range(len(b_labels)):
@@ -101,7 +104,7 @@ def stats(b_labels, predictions):
                     tn += 1
     print(f"True Positives: {tp}, False Negatives: {fn}, False Positives: {fp}, True Negatives: {tn}")
     print(has_goal_pred_goal, has_goal_pred_no_goal, has_no_goal_pred_goal, has_no_goal_pred_no_goal)
-    if fn < consts.BEST_FN and fp < consts.BEST_FP:
+    if fn < consts.BEST_FN and fp < consts.BEST_FP:  # saves model if fp and fn are lower than threshold
         print("saving model!")
         torch.save(model, consts.FILE_PATH + f"model_{fn}_{fp}.pth")
 
@@ -115,20 +118,19 @@ if __name__ == "__main__":
     labeled_clips = clip_label_list(clips, labels)
     labeled_eval_clips = clip_label_list(eval_clips, eval_labels)
     model = EfficientNetLSTMModel(input_size, consts.HIDDEN_SIZE, consts.NUM_LAYERS, output_size)
-    optimizer = torch.optim.Adam(model.parameters(), lr=consts.LR, weight_decay=0.0001)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=consts.LR, weight_decay=0.0001)
 
     loss_fn = WeightedBCELoss(consts.WEIGHT_FN, weight_fp=1.0)
     loss_eval = WeightedBCELoss(consts.WEIGHT_FN, weight_fp=1.0)
 
-    model = model.to(consts.DEVICE)
+    model = model.to(consts.DEVICE)  # moving model to GPU
 
-    # Freeze layers 0 to 3 of efficientNet, we don't train them:
-
+    # freezing layers 0 to 3 of EfficientNet, we don't train them:
     for name, param in model.efficientnet.named_parameters():
         if "features" in name and int(name.split('.')[1]) <= 3:
             param.requires_grad = False
 
-    # Training loop
+    # the training loop
     for epoch in range(consts.NUM_EPOCHS):
         print("starting epoch " + str(epoch + 1))
         model = trainer(model, labeled_clips)
