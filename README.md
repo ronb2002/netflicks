@@ -1,7 +1,6 @@
 # Netflicks
 Workshop on Deep Learning Project  
-Ron Balannik & Oded Neeman
-
+Ron and Oded
 ## Table of Contents
 
 1. [Installation](#installation)
